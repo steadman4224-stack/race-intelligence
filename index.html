@@ -1,159 +1,57 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Troy’s RacePad</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RacePad</title>
 
-<style>
-:root {
-  --bg: #111;
-  --card: #1e1e1e;
-  --text: #eee;
-  --good: #2ecc71;
-  --bad: #e74c3c;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f4f4f4;
+      color: #111;
+    }
 
-.light {
-  --bg: #f4f4f4;
-  --card: #ffffff;
-  --text: #111;
-}
+    body.dark {
+      background: #121212;
+      color: #eee;
+    }
 
-body {
-  margin: 0;
-  font-family: sans-serif;
-  background: var(--bg);
-  color: var(--text);
-}
+    header {
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #222;
+      color: white;
+    }
 
-header {
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  <div style="padding: 8px;">
-  <input type="file" id="csvInput" accept=".csv">
-  <input type="file" id="pdfInput" accept="application/pdf">
-</div>
-}
+    select, input[type=file], button {
+      margin: 6px;
+      padding: 6px;
+      font-size: 14px;
+    }
 
-select, button {
-  padding: 6px;
-  margin: 4px 0;
-}
+    .card {
+      background: white;
+      margin: 8px;
+      padding: 10px;
+      border-radius: 6px;
+    }
 
-.card {
-  background: var(--card);
-  margin: 8px;
-  padding: 12px;
-  border-radius: 10px;
-}
+    body.dark .card {
+      background: #1e1e1e;
+    }
 
-.good { color: var(--good); }
-.bad { color: var(--bad); }
-</style>
-</head>
+    .fast {
+      color: green;
+      font-weight: bold;
+    }
 
-<body>
-<header>
-  <div>
-    <select id="trackFilter"></select>
-    <select id="raceFilter"></select>
-  </div>
-  <button onclick="toggleTheme()">🌓</button>
-</header>
+    .slow {
+      color: red;
+    }
 
-<div id="cards">Loading…</div>
-
-<script>
-const SUPABASE_URL = "https://jpzednbynpmcnmcpgdyp.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwemVkbmJ5bnBtY25tY3BnZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU2ODAzODYsImV4cCI6MjA4MTI1NjM4Nn0.3elsp_7G4_ZIa0Z2Zsq-wi8BXbSV47Z6MTS6717XfvY";
-
-let data = [];
-
-function toggleTheme() {
-  document.body.classList.toggle("light");
-}
-
-function speedClass(run, par) {
-  if (!run || !par) return "";
-  return run <= par ? "good" : "bad";
-}
-
-function render() {
-  const track = trackFilter.value;
-  const race = raceFilter.value;
-
-  document.getElementById("cards").innerHTML =
-    data
-    .filter(r => (!track || r.track === track))
-    .filter(r => (!race || r.race_number == race))
-    .map(r => `
-      <div class="card">
-        <b>${r.horse}</b><br>
-        Track: ${r.track} | Race ${r.race_number}<br>
-        Barrier: ${r.barrier} | Jockey: ${r.jockey}<br>
-        BM: ${r.benchmark} | Odds: ${r.odds}<br>
-        <span class="${speedClass(r.run_time, r.par_time)}">
-          Time: ${r.run_time}s (Par: ${r.par_time}s)
-        </span>
-      </div>
-    `).join("");
-  document.getElementById("csvInput").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-
-  const text = await file.text();
-  const [header, ...rows] = text.trim().split("\n");
-  const cols = header.split(",");
-
-  const records = rows.map(r => {
-    const values = r.split(",");
-    const obj = {};
-    cols.forEach((c, i) => obj[c.trim()] = values[i]?.trim());
-    return obj;
-  });
-
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/race_cards`, {
-    method: "POST",
-    headers: {
-      apikey: SUPABASE_KEY,
-      Authorization: `Bearer ${SUPABASE_KEY}`,
-      "Content-Type": "application/json",
-      Prefer: "return=minimal"
-    },
-    body: JSON.stringify(records)
-  });
-
-  if (res.ok) {
-    alert("CSV uploaded successfully");
-    location.reload();
-  } else {
-    alert("CSV upload failed");
-  }
-});
-}
-
-fetch(`${SUPABASE_URL}/rest/v1/race_cards`, {
-  headers: {
-    apikey: SUPABASE_KEY,
-    Authorization: `Bearer ${SUPABASE_KEY}`
-  }
-})
-.then(r => r.json())
-.then(rows => {
-  data = rows;
-
-  const tracks = [...new Set(rows.map(r => r.track))];
-  trackFilter.innerHTML = `<option value="">All Tracks</option>` +
-    tracks.map(t => `<option>${t}</option>`).join("");
-
-  const races = [...new Set(rows.map(r => r.race_number))];
-  raceFilter.innerHTML = `<option value="">All Races</option>` +
-    races.map(r => `<option>${r}</option>`).join("");
-
-  trackFilter.onchange = raceFilter.onchange = render;
-  render();
-});
-</script>
-</body>
-</html>
+    a {
+      color: inherit;
