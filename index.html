@@ -30,6 +30,10 @@ header {
   padding: 12px;
   display: flex;
   justify-content: space-between;
+  <div style="padding: 8px;">
+  <input type="file" id="csvInput" accept=".csv">
+  <input type="file" id="pdfInput" accept="application/pdf">
+</div>
 }
 
 select, button {
@@ -94,6 +98,39 @@ function render() {
         </span>
       </div>
     `).join("");
+  document.getElementById("csvInput").addEventListener("change", async e => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const text = await file.text();
+  const [header, ...rows] = text.trim().split("\n");
+  const cols = header.split(",");
+
+  const records = rows.map(r => {
+    const values = r.split(",");
+    const obj = {};
+    cols.forEach((c, i) => obj[c.trim()] = values[i]?.trim());
+    return obj;
+  });
+
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/race_cards`, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_KEY,
+      Authorization: `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify(records)
+  });
+
+  if (res.ok) {
+    alert("CSV uploaded successfully");
+    location.reload();
+  } else {
+    alert("CSV upload failed");
+  }
+});
 }
 
 fetch(`${SUPABASE_URL}/rest/v1/race_cards`, {
